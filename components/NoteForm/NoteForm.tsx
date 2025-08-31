@@ -1,6 +1,6 @@
 'use client';
 
-import { ChangeEvent, useEffect } from 'react';
+import { ChangeEvent } from 'react';
 import { useNoteStore, NoteDraft, initialDraft } from '@/lib/store/noteStore';
 import { createNote } from '@/lib/api';
 import { useRouter } from 'next/navigation';
@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import css from './NoteForm.module.css';
 
 interface NoteFormProps {
-  onClose?: () => void; 
+  onClose?: () => void;
 }
 
 export default function NoteForm({ onClose }: NoteFormProps) {
@@ -16,24 +16,15 @@ export default function NoteForm({ onClose }: NoteFormProps) {
   const queryClient = useQueryClient();
   const { draft, setDraft, clearDraft } = useNoteStore();
 
-  const mutation = useMutation<unknown, Error, NoteDraft>({
+  const mutation = useMutation({
     mutationFn: (data: NoteDraft) => createNote(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notes'] });
-      clearDraft();
-      if (onClose) onClose();
-      else router.back();
+      clearDraft(); 
+      onClose ? onClose() : router.back();
     },
-    onError: (error: Error) => {
-      console.error('Failed to create note:', error);
-    },
+    onError: (error: Error) => console.error('Failed to create note:', error),
   });
-
-  useEffect(() => {
-    if (!draft.title && !draft.content) {
-      setDraft(initialDraft);
-    }
-  }, [draft, setDraft]);
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -98,7 +89,9 @@ export default function NoteForm({ onClose }: NoteFormProps) {
         <button
           type="button"
           className={css.cancelButton}
-          onClick={onClose || (() => router.back())}
+          onClick={() => {
+            onClose ? onClose() : router.back();
+          }}
           disabled={isPending}
         >
           Cancel

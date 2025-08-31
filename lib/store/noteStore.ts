@@ -27,18 +27,7 @@ export const useNoteStore = create<NoteStore>()(
     (set) => ({
       draft: initialDraft,
       setDraft: (note) =>
-        set((state) => {
-          const newDraft = { ...state.draft, ...note };
-          
-          if (
-            state.draft.title === newDraft.title &&
-            state.draft.content === newDraft.content &&
-            state.draft.tag === newDraft.tag
-          ) {
-            return state; 
-          }
-          return { draft: newDraft };
-        }),
+        set((state) => ({ draft: { ...state.draft, ...note } })),
       clearDraft: () => set({ draft: initialDraft }),
     }),
     {

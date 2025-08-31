@@ -6,11 +6,14 @@ import type { Metadata } from "next";
 export async function generateMetadata({
   params,
 }: {
-  params: { slug?: string[] };
+  params: Promise<{ slug: string[] }>;
 }): Promise<Metadata> {
-  const tag = params?.slug?.[0] ?? "All";
+  const { slug } = await params;
+  const tag = slug?.[0] ?? "All";
+
   const pageTitle =
     tag === "All" ? "All notes | NoteHub" : `Notes filtered by ${tag} | NoteHub`;
+
   const pageDescription =
     tag === "All"
       ? "Browse all notes in NoteHub."
@@ -38,12 +41,11 @@ export async function generateMetadata({
 export default async function NotesFilterPage({
   params,
 }: {
-  params: { slug?: string[] };
+  params: Promise<{ slug: string[] }>;
 }) {
- 
-  const tag = params?.slug?.[0] ?? "All";
+  const { slug } = await params;
+  const tag = slug?.[0] ?? "All";
 
- 
   const queryClient = new QueryClient();
   await queryClient.prefetchQuery({
     queryKey: ["notes", { q: "", page: 1, tag: tag === "All" ? undefined : tag }],
@@ -55,7 +57,6 @@ export default async function NotesFilterPage({
       }),
   });
 
-  
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       <NotesClient tag={tag} />
