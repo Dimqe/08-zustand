@@ -1,13 +1,21 @@
 import css from './page.module.css';
+import type { Metadata } from 'next';
 
-export const metadata = {
+export const metadata: Metadata = {
   title: '404 - Page not found | NoteHub',
   description: 'The page you are looking for does not exist in NoteHub.',
   openGraph: {
     title: '404 - Page not found | NoteHub',
     description: 'The page you are looking for does not exist in NoteHub.',
-    url: 'https://your-vercel-domain.vercel.app/404',
-    images: ['https://ac.goit.global/fullstack/react/notehub-og-meta.jpg'],
+    url: 'https://08-zustand-eta-one.vercel.app',
+    images: [
+      {
+        url: 'https://ac.goit.global/fullstack/react/notehub-og-meta.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'NoteHub 404 preview',
+      },
+    ],
   },
 };
 

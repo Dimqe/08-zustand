@@ -1,45 +1,51 @@
+
 'use client';
 
-import { useState, ChangeEvent, useEffect } from 'react';
+import { ChangeEvent, useEffect } from 'react';
 import { useNoteStore, NoteDraft, initialDraft } from '@/lib/store/noteStore';
 import { createNote } from '@/lib/api';
 import { useRouter } from 'next/navigation';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import css from './NoteForm.module.css';
 
-interface NoteFormProps {
-  onClose: () => void;
-}
-
-export default function NoteForm({ onClose }: NoteFormProps) {
+export default function NoteForm() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { draft, setDraft, clearDraft } = useNoteStore();
-  const [loading, setLoading] = useState(false);
 
-  // Завантажуємо draft при монтованні компонента
+ 
+  const mutation = useMutation<unknown, Error, NoteDraft>({
+    mutationFn: (data: NoteDraft) => createNote(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      clearDraft();
+      router.back();
+    },
+    onError: (error: Error) => {
+      console.error('Failed to create note:', error);
+    },
+  });
+
+  
   useEffect(() => {
     if (!draft.title && !draft.content) {
       setDraft(initialDraft);
     }
   }, [draft, setDraft]);
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setDraft({ [name]: value } as Partial<NoteDraft>);
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true);
-    try {
-      await createNote(draft);
-      clearDraft(); // очищаємо draft після успішного створення
-      router.back();
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
+    mutation.mutate(draft);
   };
+
+  const isPending = mutation.status === 'pending';
 
   return (
     <form onSubmit={handleSubmit} className={css.form} aria-label="Create a new note">
@@ -71,7 +77,13 @@ export default function NoteForm({ onClose }: NoteFormProps) {
 
       <div className={css.formGroup}>
         <label htmlFor="tag">Tag</label>
-        <select id="tag" name="tag" value={draft.tag} onChange={handleChange} className={css.select}>
+        <select
+          id="tag"
+          name="tag"
+          value={draft.tag}
+          onChange={handleChange}
+          className={css.select}
+        >
           <option value="Todo">Todo</option>
           <option value="Work">Work</option>
           <option value="Personal">Personal</option>
@@ -81,11 +93,16 @@ export default function NoteForm({ onClose }: NoteFormProps) {
       </div>
 
       <div className={css.actions}>
-        <button type="button" className={css.cancelButton} onClick={onClose} disabled={loading}>
+        <button
+          type="button"
+          className={css.cancelButton}
+          onClick={() => router.back()}
+          disabled={isPending}
+        >
           Cancel
         </button>
-        <button type="submit" className={css.submitButton} disabled={loading}>
-          {loading ? 'Creating...' : 'Create note'}
+        <button type="submit" className={css.submitButton} disabled={isPending}>
+          {isPending ? 'Creating...' : 'Create note'}
         </button>
       </div>
     </form>

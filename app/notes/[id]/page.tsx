@@ -1,12 +1,13 @@
 import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query';
 import { fetchNoteById } from '@/lib/api';
 import NoteDetailsClient from './NoteDetails.client';
+import type { Metadata } from 'next';
 
 export async function generateMetadata({
   params,
 }: {
   params: { id: string };
-}) {
+}): Promise<Metadata> {
   const note = await fetchNoteById(params.id);
 
   const pageTitle = `${note.title} | NoteHub`;
@@ -20,8 +21,15 @@ export async function generateMetadata({
     openGraph: {
       title: pageTitle,
       description: pageDescription,
-      url: `https://your-vercel-domain.vercel.app/notes/${params.id}`,
-      images: ['https://ac.goit.global/fullstack/react/notehub-og-meta.jpg'],
+      url: `https://08-zustand-eta-one.vercel.app/notes/${params.id}`,
+      images: [
+        {
+          url: 'https://ac.goit.global/fullstack/react/notehub-og-meta.jpg',
+          width: 1200,
+          height: 630,
+          alt: 'NoteHub note preview',
+        },
+      ],
     },
   };
 }
